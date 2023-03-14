@@ -1,0 +1,27 @@
+Package: RetroJM
+Type: Package
+Title: Fit joint model in retrospective time scale
+Version: 0.99.1
+Authors@R: c(person(given = "Quran",
+           family = "Wu",
+           role = c("aut"),
+           email = "wuquran@ufl.edu"),
+           person(given = "Zhigang",
+           family = "Li",
+           role = c("aut", "cre"),
+           email = "lzg2151@gmail.com")
+           )
+Description: This package fit joint model in retrospective time scale starting from death. 
+             The longitudinal trajectory is piecewise linear, and the hazard model for death 
+             and dropout are piecewise constant. 
+License: GPL-2
+Depends: R (>= 4.2.0)
+Imports: Rcpp (>= 1.0.9), NlcOptim, doParallel, foreach, mathjaxr, stats, parallel, tidyr, lme4
+Suggests: knitr, rmarkdown
+LazyData: true
+VignetteBuilder: knitr
+RdMacros: mathjaxr
+LinkingTo: Rcpp, RcppArmadillo
+RoxygenNote: 7.2.1
+Encoding: UTF-8
+NeedsCompilation: no

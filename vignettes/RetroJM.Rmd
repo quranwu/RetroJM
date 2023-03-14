@@ -1,0 +1,133 @@
+---
+title: "Introduction to RetroJM"
+#output: rmarkdown::html_vignette
+output: rmarkdown::pdf_document
+
+vignette: >
+  %\VignetteIndexEntry{RetroJM}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+library(RetroJM)
+```
+
+RetroJM fit a joint model in retrospective time scale, making the longitudinal trajectory starting from death time. It specifically explains how the longitudinal trajectory performs when it's close to death. 
+
+The longitudinal model is: 
+$$
+Y_i(t^*)=\beta_{\mu}(t^*)+A_i\beta_A(t^*)+X_i^T\psi_X+U_i^*(t^*)+\epsilon_i(t^*)
+$$
+where
+
+$t^*=D-t$, $D$ is death time and $t$ is observed time.
+
+The hazard for competing risks are: 
+$$
+\lambda_i^{\delta}(t)=\exp{\Big(\alpha_0^{\delta}(t)+A_i\alpha_A^{\delta}(t)+\alpha_U^{\delta} U_i \Big)},\hspace{0.2cm}\text{for}\hspace{0.12cm} \delta=1,2
+$$
+
+## Package installation 
+
+To install, type the following command in R console:
+
+```{r eval=FALSE}
+install.packages("RetroJM", repos = "http://cran.us.r-project.org")
+```
+
+## Input and Output for RetroJM() function
+
+The `RetroJM()` function is the main function. The User Inputs are: 
+
+- `data`: The dataset used in analysis. It could be either long format or wide format.
+It should contain longitudinal measurement, measurement time, a binary variable as
+parameter of interest, ID for subjects, event/censoring time, an indicator
+for death status, an indicator for drop out status, and any covariates.
+
+- `long_format`:  A logical argument takes value TRUE or FALSE. If TRUE, the input dataset
+is in long format. If FALSE, the input dataset should be wide format. Defaut is TRUE.  
+
+- `outcome_var`: Name of outcome variables. If the input data is long format, it should 
+be a single character; If the input is wide format, it should be a character vector. 
+
+
+- `time_var`: Name of observed time variables. If the input data is long format, it should 
+be a single character; If the input is wide format, it should be a character vector. It should have same length as "outcome_var". 
+
+- `Ai_var`: Name of parameter of interest. Have to be a binary variable coded as 0/1, 
+such as control/treatment.
+
+- `last_obs_time_var`: Name of variable for event/censoring time. 
+
+- `ID_var`: Name of ID variable.
+
+- `surv_censor_var`: Name of indicator variable for death status. 
+
+- `drop_censor_var`: Name of indicator variable for drop out status. 
+
+- `cov_var`: Name of covariates. Default is NULL, meaning no covariates. 
+
+- `longi_end_time`: The end time for longitudinal trajectory. It take numeric as input.
+If NULL, then it equals to study end time. Default is NULL.  
+
+- `surv_drop_knots`: The number of additional pieces for piecewise constant hazard model in survival and dropout hazard. Default is 0, meaning no additional pieces and the hazard is constant. 
+
+- `longi_inter_knots`: The number of additional pieces for piecewise linear model in 
+longitudinal trajectory. Default is 0, meaning no additional pieces and the longitudinal
+trajectory is linear. 
+
+- `num_cores`: The number of cores used for parallel computing. 
+
+
+## Examples
+
+The example datasets `Retro_data` is included in the package. They could be accessed by: 
+```{r}
+# library(Retro_JM)
+
+data(Retro_data)
+```
+The `Retro_data` is a wide format data. It contains 200 subjects, 13 longitudinal measurements. 
+
+From the data, the name of longitudinal measurements are: `Y1-Y13`, name of measured time are: `time1-time13`, name of parameter of interest is: `Ai`, name of event/censoring time is `observed.t`, name of covariates are: `x1, x2`, name of ID variable is: `ID`, name of death status is: `surv_ind`, name of drop out status is: `drop_ind`. We want to stop modeling longitudinal measurement after `25` month after death, and we assume the hazard function has two pieces, longtitudinal measurement has two pieces, then we can fit the model by following: 
+```{r, eval=FALSE}
+test_run <- RetroJM(
+  data = Retro_data,
+  long_format = FALSE,
+  outcome_var = paste0("Y", 1:13),
+  time_var = paste0("time", 1:13),
+  Ai_var = "Ai",
+  last_obs_time_var = "observed.t",
+  cov_var = paste0("x", 1:2),
+  ID_var = "ID",
+  surv_censor_var = "surv_ind",
+  drop_censor_var = "drop_ind",
+  longi_end_time = 25,
+  surv_drop_knots = 1,
+  longi_inter_knots = 1,
+  num_cores = 2
+)
+```
+
+The results could be accessed by: 
+
+```{r, include=FALSE}
+load("test_run.Rdata")
+```
+
+```{r}
+### Estiamtes for survival part
+test_run$surv_out_dat
+
+### Estimates for dropout part
+test_run$drop_out_dat
+
+### Estimates for longitudinal part
+test_run$longiout_dat
+```
